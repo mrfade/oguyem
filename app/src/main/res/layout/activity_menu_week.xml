@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/error_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:layout_gravity="center"
+        android:textSize="16sp"
+        android:fontFamily="@font/lato"
+        android:background="#e74c3c"
+        android:padding="10sp"
+        android:textColor="@color/white"
+        android:visibility="gone">
+    </TextView>
+
+    <TextView
+        android:id="@+id/menu_restored"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:layout_gravity="center"
+        android:textSize="16sp"
+        android:fontFamily="@font/lato"
+        android:background="#3498db"
+        android:padding="10sp"
+        android:textColor="@color/white"
+        android:visibility="gone">
+    </TextView>
+
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipe_container"
+        android:layout_width="match_parent"
+        android:layout_height="0sp"
+        android:layout_weight="1">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/pager1"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/pager2"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/pager3"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/pager4"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/pager5"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+            </LinearLayout>
+        </ScrollView>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+</LinearLayout>
