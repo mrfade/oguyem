@@ -2,16 +2,11 @@ package dev.solak.oguyem;
 
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.transition.ChangeBounds;
-import android.transition.Explode;
 import android.transition.Fade;
-import android.transition.Slide;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,11 +21,9 @@ import androidx.viewpager2.adapter.FragmentViewHolder;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -38,7 +31,7 @@ import java.util.Locale;
 
 import dev.solak.oguyem.fragments.MenuWeekFragment;
 import dev.solak.oguyem.models.Menu;
-import dev.solak.oguyem.models.MenuResponse;
+import dev.solak.oguyem.models.MenusResponse;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -53,7 +46,7 @@ public class MenuWeekActivity extends AppCompatActivity {
     ArrayList<ViewPager2> viewPagers = new ArrayList<ViewPager2>();
     ArrayList<FragmentStateAdapter> pagerAdapters = new ArrayList<FragmentStateAdapter>();
 
-    MenuResponse menuResponse;
+    MenusResponse menuResponse;
     Date menuCacheLastUpdated;
 
     TextView textViewErrorMessage, textViewMenuRestored;
@@ -89,10 +82,10 @@ public class MenuWeekActivity extends AppCompatActivity {
     private void fetchMenuFromApi() {
         loading = ProgressDialog.show(this, getString(R.string.menu_fetching), getString(R.string.please_wait), false, false);
 
-        Call<MenuResponse> call = API.apiService.getMenu();
-        call.enqueue(new Callback<MenuResponse>() {
+        Call<MenusResponse> call = API.apiService.getMenus();
+        call.enqueue(new Callback<MenusResponse>() {
             @Override
-            public void onResponse(Call<MenuResponse> call, Response<MenuResponse> response) {
+            public void onResponse(Call<MenusResponse> call, Response<MenusResponse> response) {
 
                 if (response.isSuccessful()) {
                     menuResponse = response.body();
@@ -112,7 +105,7 @@ public class MenuWeekActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<MenuResponse> call, Throwable t) {
+            public void onFailure(Call<MenusResponse> call, Throwable t) {
                 Log.d("MenuFetch", "Failed - Request error!");
                 menuFetchFailed();
             }
@@ -144,7 +137,7 @@ public class MenuWeekActivity extends AppCompatActivity {
         Log.d("MenuFetch", menuCache);
 
         Gson gson = new Gson();
-        MenuResponse obj = gson.fromJson(menuCache, MenuResponse.class);
+        MenusResponse obj = gson.fromJson(menuCache, MenusResponse.class);
 
         menu = obj.getMenu();
 
@@ -246,10 +239,10 @@ public class MenuWeekActivity extends AppCompatActivity {
             @Override
             public void onRefresh() {
 
-                Call<MenuResponse> call = API.apiService.getMenu();
-                call.enqueue(new Callback<MenuResponse>() {
+                Call<MenusResponse> call = API.apiService.getMenus();
+                call.enqueue(new Callback<MenusResponse>() {
                     @Override
-                    public void onResponse(Call<MenuResponse> call, Response<MenuResponse> response) {
+                    public void onResponse(Call<MenusResponse> call, Response<MenusResponse> response) {
 
                         if (response.isSuccessful()) {
                             menuResponse = response.body();
@@ -271,7 +264,7 @@ public class MenuWeekActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onFailure(Call<MenuResponse> call, Throwable t) {
+                    public void onFailure(Call<MenusResponse> call, Throwable t) {
                         Log.d("MenuFetch", "Failed - Request error!");
                         Toast.makeText(MenuWeekActivity.this, getString(R.string.menu_fetch_failed), Toast.LENGTH_SHORT).show();
                         swipeRefreshLayout.setRefreshing(false);

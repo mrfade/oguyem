@@ -1,16 +1,17 @@
 package dev.solak.oguyem.models;
 
+import java.util.List;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class MenuResponse {
+public class CommentsResponse {
 
     @SerializedName("status")
     @Expose
     private String status;
-    @SerializedName("menu")
+    @SerializedName("comments")
     @Expose
-    private Menu menu;
+    private List<Comment> comments = null;
 
     public String getStatus() {
         return status;
@@ -20,12 +21,12 @@ public class MenuResponse {
         this.status = status;
     }
 
-    public Menu getMenu() {
-        return menu;
+    public List<Comment> getComments() {
+        return comments;
     }
 
-    public void setMenu(Menu menu) {
-        this.menu = menu;
+    public void setComments(List<Comment> comments) {
+        this.comments = comments;
     }
 
 }

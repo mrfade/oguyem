@@ -5,7 +5,8 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class API {
-    public static final String BASE_URL = "https://oguyem-api.solak.dev/";
+//    public static final String BASE_URL = "https://oguyem-api.solak.dev/";
+    public static final String BASE_URL = "https://oguyem-apiv2.solak.dev/";
 
     public static oguyemApi apiService;
 

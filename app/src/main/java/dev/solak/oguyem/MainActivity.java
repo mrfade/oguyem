@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -18,23 +17,17 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import dev.solak.oguyem.interfaces.oguyemApi;
 import dev.solak.oguyem.models.Food;
 import dev.solak.oguyem.models.Menu;
-import dev.solak.oguyem.models.MenuResponse;
+import dev.solak.oguyem.models.MenusResponse;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
-
-import static dev.solak.oguyem.Utils.formatTitleDate;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -76,14 +69,14 @@ public class MainActivity extends AppCompatActivity {
                 .build();
 
         oguyemApi apiService = retrofit.create(oguyemApi.class);
-        Call<MenuResponse> call = apiService.getMenu();
+        Call<MenusResponse> call = apiService.getMenus();
 
-        call.enqueue(new Callback<MenuResponse>() {
+        call.enqueue(new Callback<MenusResponse>() {
             @Override
-            public void onResponse(Call<MenuResponse> call, Response<MenuResponse> response) {
+            public void onResponse(Call<MenusResponse> call, Response<MenusResponse> response) {
 
                 if (response.isSuccessful()) {
-                    MenuResponse menuResponse = response.body();
+                    MenusResponse menuResponse = response.body();
 
                     _menu = menuResponse.getMenu();
 
@@ -95,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<MenuResponse> call, Throwable t) {
+            public void onFailure(Call<MenusResponse> call, Throwable t) {
                 Log.d("Yo", "Errror!");
             }
 

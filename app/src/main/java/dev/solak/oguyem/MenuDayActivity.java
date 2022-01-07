@@ -6,34 +6,50 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
 import android.animation.ObjectAnimator;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.transition.ChangeBounds;
 import android.transition.Fade;
 import android.transition.Slide;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import dev.solak.oguyem.adapters.CommentsAdapter;
+import dev.solak.oguyem.models.Comment;
+import dev.solak.oguyem.models.CommentsResponse;
 import dev.solak.oguyem.models.Food;
 import dev.solak.oguyem.models.Menu;
+import dev.solak.oguyem.models.MenusResponse;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MenuDayActivity extends AppCompatActivity {
 
     private int arrPosition;
     private Menu menu;
+    private List<Comment> comments;
+    private CommentsAdapter commentsAdapter;
 
     LinearLayout layout, innerLayout, menuLayout;
-    CardView cardView;
+    CardView cardView, commentsCardView;
     TextView textViewDate, textViewMenuCalorie;
+    ProgressBar progressBar;
+    ListView commentsListView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +76,10 @@ public class MenuDayActivity extends AppCompatActivity {
         textViewDate = findViewById(R.id.date);
         textViewMenuCalorie = findViewById(R.id.menuCalorie);
 
+        progressBar = findViewById(R.id.progressBar);
+        commentsCardView = findViewById(R.id.comments_card_view);
+        commentsListView = findViewById(R.id.comments_list);
+
         String formattedDate = Utils.formatTitleDate(menu.getDate());
         textViewDate.setText(formattedDate);
         String menuCalorie = Utils.calculateMenuCalorie(menu.getFoodList());
@@ -79,6 +99,51 @@ public class MenuDayActivity extends AppCompatActivity {
 
             menuLayout.addView(item, 0);
         }
+
+        fetchCommentsFromApi();
+    }
+
+    private void fetchCommentsFromApi() {
+        progressBar.setVisibility(View.VISIBLE);
+
+        Call<CommentsResponse> call = API.apiService.getComments(menu.getDate());
+        call.enqueue(new Callback<CommentsResponse>() {
+            @Override
+            public void onResponse(Call<CommentsResponse> call, Response<CommentsResponse> response) {
+
+                if (response.isSuccessful()) {
+                    CommentsResponse commentsResponse = response.body();
+
+                    comments = commentsResponse.getComments();
+
+                    Log.d("CommentsFetch", "Success");
+
+                    commentsCardView.setVisibility(View.VISIBLE);
+                    populateComments();
+
+                    progressBar.setVisibility(View.GONE);
+                } else {
+                    Log.d("CommentsFetch", "Failed - Request not successful!");
+                    commentsFetchFailed();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CommentsResponse> call, Throwable t) {
+                Log.d("CommentsFetch", "Failed - Request error!");
+                commentsFetchFailed();
+            }
+        });
+    }
+
+    private void commentsFetchFailed() {
+        Toast.makeText(MenuDayActivity.this, R.string.comment_fetch_failed, Toast.LENGTH_LONG).show();
+        progressBar.setVisibility(View.GONE);
+    }
+
+    private void populateComments() {
+        commentsAdapter = new CommentsAdapter(comments, MenuDayActivity.this);
+        commentsListView.setAdapter(commentsAdapter);
     }
 
     private void setWindowTransitions() {
