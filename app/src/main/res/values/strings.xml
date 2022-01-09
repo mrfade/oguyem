@@ -12,4 +12,14 @@
     <string name="new_comment">Yeni Yorum</string>
     <string name="your_rating">Puanınız</string>
     <string name="write_a_comment">Yorum yazın</string>
+    <string name="new_comment_failed">Yorumunuz gönderilemedi.</string>
+    <string name="new_comment_success">Yorumunuz başarıyla gönderildi.</string>
+    <string name="new_comment_fillfields">Puan ve yorum yazmalısınız!</string>
+    <string name="select_image">Resim Seçin</string>
+    <string name="no_comment">Hiç yorum yapılmamış.</string>
+    <string name="delete_comment">Yorumu Sil</string>
+    <string name="yes">Evet</string>
+    <string name="no">Hayır</string>
+    <string name="comment_deleted_successfully">Yorumunuz başarıyla silindi</string>
+    <string name="comment_deletion_failed">Yorumunuz silinemedi</string>
 </resources>

@@ -76,6 +76,10 @@ public class Utils {
         return ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
     }
 
+    public static boolean checkCameraPermission(Context context) {
+        return ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
+    }
+
     // https://medium.com/@euryperez/android-pearls-set-size-to-a-view-in-dp-programatically-71d22eed7fc0
     // https://www.dev2qa.com/android-get-application-context-from-anywhere-example/
     public static int dpToPx(int dp) {

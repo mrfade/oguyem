@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RatingBar;
+import android.widget.Toast;
 
 import androidx.fragment.app.DialogFragment;
 
@@ -53,10 +54,10 @@ public class NewCommentDialogFragment extends DialogFragment {
     EditText editText;
     Button button;
 
-    Float rating;
+    String rating;
     String comment;
 
-    public Float getRating() {
+    public String getRating() {
         return rating;
     }
 
@@ -78,7 +79,7 @@ public class NewCommentDialogFragment extends DialogFragment {
         ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
             @Override
             public void onRatingChanged(RatingBar ratingBar, float v, boolean b) {
-                if(v < 1.0f)
+                if (v < 1.0f)
                     ratingBar.setRating(1.0f);
             }
         });
@@ -99,7 +100,7 @@ public class NewCommentDialogFragment extends DialogFragment {
                 public void onClick(DialogInterface dialog, int id) {
                     // Send the positive button event back to the host activity
 
-                    rating = ratingBar.getRating();
+                    rating = String.valueOf(ratingBar.getRating());
                     comment = editText.getText().toString();
 
                     listener.onDialogPositiveClick(NewCommentDialogFragment.this);

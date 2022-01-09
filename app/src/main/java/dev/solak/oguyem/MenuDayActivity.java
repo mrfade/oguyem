@@ -6,24 +6,35 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.Manifest;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.transition.ChangeBounds;
 import android.transition.Slide;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -32,7 +43,10 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.mohamedabulgasem.loadingoverlay.LoadingAnimation;
+import com.mohamedabulgasem.loadingoverlay.LoadingOverlay;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Transformation;
 
 import org.ocpsoft.prettytime.PrettyTime;
 
@@ -41,19 +55,23 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import dev.solak.oguyem.adapters.CommentsAdapter;
 import dev.solak.oguyem.classes.API;
+import dev.solak.oguyem.classes.User;
 import dev.solak.oguyem.classes.Utils;
 import dev.solak.oguyem.fragments.NewCommentDialogFragment;
 import dev.solak.oguyem.models.Comment;
 import dev.solak.oguyem.models.CommentsResponse;
 import dev.solak.oguyem.models.Food;
 import dev.solak.oguyem.models.Image;
+import dev.solak.oguyem.models.InfoResponse;
 import dev.solak.oguyem.models.Menu;
+import dev.solak.oguyem.models.MenusResponse;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import retrofit2.Call;
@@ -67,23 +85,36 @@ public class MenuDayActivity extends AppCompatActivity implements NewCommentDial
     private List<Comment> comments;
     private CommentsAdapter commentsAdapter;
 
+    private File tempImageFile;
     private Uri outputFileUri;
     private Uri selectedImageUri;
     private String selectedImageUriPath;
 
+    // display metrics
+    int displayHeight, displayWidth;
+
+    SwipeRefreshLayout swipeRefreshLayout;
+
     LinearLayout layout, innerLayout, menuLayout, commentsContentLayout, commentsListLayout;
     RelativeLayout newCommentLayout;
     CardView cardView, commentsCardView;
-    TextView textViewDate, textViewMenuCalorie;
+    TextView textViewDate, textViewMenuCalorie, textViewNoComment;
     ProgressBar progressBar;
 //    ListView commentsListView;
+
+    private final Map<Integer, int[]> imgDimCache = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_menu_day);
 
+        calculateDisplayMetrics();
         setWindowTransitions();
+
+        // setup swipe refresh
+        swipeRefreshLayout = findViewById(R.id.swipe_container);
+        setupSwipeRefresh();
 
         // calling the action bar
         ActionBar actionBar = getSupportActionBar();
@@ -103,9 +134,10 @@ public class MenuDayActivity extends AppCompatActivity implements NewCommentDial
         textViewDate = findViewById(R.id.date);
         textViewMenuCalorie = findViewById(R.id.menuCalorie);
 
-        progressBar = findViewById(R.id.progressBar);
         commentsCardView = findViewById(R.id.comments_card_view);
         commentsContentLayout = findViewById(R.id.comments_content_layout);
+        progressBar = findViewById(R.id.progressBar);
+        textViewNoComment = findViewById(R.id.no_comment);
         newCommentLayout = findViewById(R.id.new_comment_layout);
         commentsListLayout = findViewById(R.id.comments_list_layout);
 //        commentsListView = findViewById(R.id.comments_list);
@@ -131,16 +163,18 @@ public class MenuDayActivity extends AppCompatActivity implements NewCommentDial
         }
 
         fetchCommentsFromApi();
-
+        newCommentLayout.setVisibility(View.VISIBLE);
         /*if (menu.getDate().equals(Utils.formatDate("yyyy-MM-dd", new Date()))) {
-            fetchCommentsFromApi();
+            newCommentLayout.setVisibility(View.VISIBLE);
         } else {
-            commentsCardView.setVisibility(View.GONE);
+            newCommentLayout.setVisibility(View.GONE);
         }*/
     }
 
     private void fetchCommentsFromApi() {
         progressBar.setVisibility(View.VISIBLE);
+        commentsListLayout.setVisibility(View.GONE);
+        textViewNoComment.setVisibility(View.GONE);
 
         Call<CommentsResponse> call = API.apiService.getComments(menu.getDate());
         call.enqueue(new Callback<CommentsResponse>() {
@@ -156,7 +190,7 @@ public class MenuDayActivity extends AppCompatActivity implements NewCommentDial
 
                     populateComments();
 
-                    newCommentLayout.setVisibility(View.VISIBLE);
+                    commentsListLayout.setVisibility(View.VISIBLE);
                     progressBar.setVisibility(View.GONE);
                 } else {
                     Log.d("CommentsFetch", "Failed - Request not successful!");
@@ -181,6 +215,8 @@ public class MenuDayActivity extends AppCompatActivity implements NewCommentDial
 //        commentsAdapter = new CommentsAdapter(comments, MenuDayActivity.this);
 //        commentsListView.setAdapter(commentsAdapter);
 
+        textViewNoComment.setVisibility(comments.size() > 0 ? View.GONE : View.VISIBLE);
+
         commentsListLayout.removeAllViews();
         LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         for (Comment comment : comments) {
@@ -189,6 +225,58 @@ public class MenuDayActivity extends AppCompatActivity implements NewCommentDial
             TextView timeago = item.findViewById(R.id.timeago);
             TextView tComment = item.findViewById(R.id.comment);
             LinearLayout imagesLayout = item.findViewById(R.id.images_layout);
+
+            Log.d("COMMENT", "User.id: " + User.user.getId());
+            Log.d("COMMENT", "Comment.user.id: " + comment.getUserId());
+
+            Button deleteButton = item.findViewById(R.id.delete_comment);
+            if (comment.getUserId().equals(User.user.getId())) {
+                item.setBackgroundColor(Color.parseColor("#515151"));
+
+                deleteButton.setVisibility(View.VISIBLE);
+                deleteButton.setOnClickListener(view -> {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(MenuDayActivity.this, R.style.AlertDialogTheme);
+                    // Add the buttons
+                    builder.setPositiveButton(R.string.yes, (dialog, id) -> {
+                        // User clicked OK button
+
+                        // delete comment
+                        Call<InfoResponse> call = API.apiService.deleteComment(menu.getDate(), comment.getId());
+                        call.enqueue(new Callback<InfoResponse>() {
+                            @Override
+                            public void onResponse(@NonNull Call<InfoResponse> call, @NonNull Response<InfoResponse> response) {
+
+                                if (response.isSuccessful()) {
+                                    Log.d("COMMENT_DELETE", "Success");
+
+                                    // fetch comments
+                                    fetchCommentsFromApi();
+
+                                    Toast.makeText(MenuDayActivity.this, getString(R.string.comment_deleted_successfully), Toast.LENGTH_LONG).show();
+                                } else {
+                                    Log.d("COMMENT_DELETE", "Failed - Request not successful!");
+                                    Toast.makeText(MenuDayActivity.this, getString(R.string.comment_deletion_failed), Toast.LENGTH_LONG).show();
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(@NonNull Call<InfoResponse> call, @NonNull Throwable t) {
+                                Log.d("CommentsFetch", "Failed - Request error!");
+                                Toast.makeText(MenuDayActivity.this, getString(R.string.comment_deletion_failed), Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    });
+                    builder.setNegativeButton(R.string.no, (dialog, id) -> {
+                        // User cancelled the dialog
+                    });
+
+                    builder.setTitle("Silmek istediğine emin misin?");
+
+                    // Create the AlertDialog
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+                });
+            }
 
             try {
                 rating.setRating(Float.parseFloat(comment.getRating()));
@@ -207,6 +295,7 @@ public class MenuDayActivity extends AppCompatActivity implements NewCommentDial
             for (Image image : comment.getImages()) {
                 ImageView imageView = new ImageView(this);
                 imageView.setLayoutParams(new LinearLayout.LayoutParams(Utils.dpToPx(80), Utils.dpToPx(80)));
+                imageView.setOnClickListener(view -> onMenuCommentImageClick(image));
 
                 imagesLayout.addView(imageView);
                 imagesLayout.setVisibility(View.VISIBLE);
@@ -259,38 +348,73 @@ public class MenuDayActivity extends AppCompatActivity implements NewCommentDial
         getWindow().setSharedElementExitTransition(changeBounds);
     }
 
+    private void setupSwipeRefresh() {
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+
+                Call<CommentsResponse> call = API.apiService.getComments(menu.getDate());
+                call.enqueue(new Callback<CommentsResponse>() {
+                    @Override
+                    public void onResponse(Call<CommentsResponse> call, Response<CommentsResponse> response) {
+
+                        if (response.isSuccessful()) {
+                            CommentsResponse commentsResponse = response.body();
+
+                            comments = commentsResponse.getComments();
+
+                            Log.d("CommentsFetch", "Success");
+
+                            populateComments();
+                        } else {
+                            Log.d("CommentsFetch", "Failed - Request not successful!");
+                            commentsFetchFailed();
+                        }
+
+                        swipeRefreshLayout.setRefreshing(false);
+                    }
+
+                    @Override
+                    public void onFailure(Call<CommentsResponse> call, Throwable t) {
+                        Log.d("CommentsFetch", "Failed - Request error!");
+                        commentsFetchFailed();
+
+                        swipeRefreshLayout.setRefreshing(false);
+                    }
+                });
+
+            }
+        });
+
+        // Scheme colors for animation
+        swipeRefreshLayout.setColorSchemeColors(
+                getResources().getColor(android.R.color.holo_blue_bright, getTheme()),
+                getResources().getColor(android.R.color.holo_green_light, getTheme()),
+                getResources().getColor(android.R.color.holo_orange_light, getTheme()),
+                getResources().getColor(android.R.color.holo_red_light, getTheme())
+        );
+    }
+
+    public void newCommentBtnClick(View view) {
+        DialogFragment newFragment = new NewCommentDialogFragment();
+        newFragment.show(getSupportFragmentManager(), "new_comment");
+
+        tempImageFile = null;
+        outputFileUri = selectedImageUri = null;
+        selectedImageUriPath = null;
+    }
+
     public void onSelectImageClick() {
         // check permission
+//        if (!Utils.checkReadStoragePermission(MenuDayActivity.this) || !Utils.checkCameraPermission(MenuDayActivity.this)) {
         if (!Utils.checkReadStoragePermission(MenuDayActivity.this)) {
             requestPermissions( new String[] { Manifest.permission.READ_EXTERNAL_STORAGE }, 1212);
+            requestPermissions( new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1213);
+//            requestPermissions( new String[] { Manifest.permission.CAMERA }, 1214);
         } else {
             // has permission
             openImageIntent();
         }
-    }
-
-    // https://developer.android.com/training/permissions/requesting
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        switch (requestCode) {
-            case 1212:
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // Permission is granted.
-
-                    openImageIntent();
-                } else {
-                    // Explain to the user that the feature is unavailable because
-                    // the features requires a permission that the user has denied.
-
-                    Toast.makeText(MenuDayActivity.this, "Dosya okuma izni vermelisiniz", Toast.LENGTH_LONG).show();
-                }
-                return;
-        }
-        // Other 'case' lines to check for other
-        // permissions this app might request.
     }
 
     private void openImageIntent() {
@@ -298,16 +422,36 @@ public class MenuDayActivity extends AppCompatActivity implements NewCommentDial
         // Determine Uri of camera image to save.
 //        final File root = new File(Environment.getExternalStorageDirectory() + File.separator + "MyDir" + File.separator);
 //        root.mkdirs();
-        final String fname = Utils.getUniqueImageFilename();
+//        final String fname = Utils.getUniqueImageFilename();
 //        final File sdImageMainDirectory = new File(root, fname);
-        File outputDir = this.getCacheDir(); // context being the Activity pointer
-        File sdImageMainDirectory = null;
-        try {
-            sdImageMainDirectory = File.createTempFile(fname, ".jpg", outputDir);
-        } catch (IOException e) {
-            e.printStackTrace();
+//        File outputDir = this.getCacheDir(); // context being the Activity pointer
+//        File sdImageMainDirectory = null;
+//        try {
+//            sdImageMainDirectory = File.createTempFile(fname, ".jpg", outputDir);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+
+        File root_dir;
+        if (Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED)) {
+            root_dir = getExternalFilesDir(null);
+        } else {
+            root_dir = getCacheDir();
         }
-        outputFileUri = Uri.fromFile(sdImageMainDirectory);
+//        root_dir = getCacheDir();
+
+        File root =  new File(root_dir, File.separator + "MyDir" + File.separator);
+        if (root.mkdirs()) {
+            Log.d("SELECT_IMAGE", "root directory created");
+        } else {
+            Log.d("SELECT_IMAGE", "root directory failed to be created");
+        }
+
+        final String tempFileName = Utils.getUniqueImageFilename();
+        tempImageFile = new File(root, tempFileName);
+
+        outputFileUri = Uri.fromFile(tempImageFile);
+        Log.d("SELECT_IMAGE", "outputFileUri: " + Utils.getPath(this, outputFileUri));
 
         // Camera.
         final List<Intent> cameraIntents = new ArrayList<Intent>();
@@ -337,9 +481,180 @@ public class MenuDayActivity extends AppCompatActivity implements NewCommentDial
         startActivityForResult(chooserIntent, 1111);
     }
 
+    private void onMenuCommentImageClick(Image image) {
+        // https://stackoverflow.com/a/7694150/10873011
+        Dialog dialog = new Dialog(this);
+        dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+        View view = getLayoutInflater().inflate(R.layout.dialog_image, null);
+
+        int imageViewMargin = 100;
+        ImageView imageView = view.findViewById(R.id.image);
+//        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(displayWidth - imageViewMargin * 2, displayHeight - imageViewMargin * 2);
+//        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(displayWidth, displayHeight);
+//        imageView.setLayoutParams(layoutParams);
+
+        Button button = view.findViewById(R.id.close);
+        button.setOnClickListener(view1 -> dialog.dismiss());
+
+        ProgressBar progressBar = view.findViewById(R.id.progress_bar);
+        progressBar.setVisibility(View.VISIBLE);
+
+        dialog.setContentView(view);
+        dialog.show();
+
+        // dimensions witdh, height
+        final int[] dims = { 0, 0 };
+        Picasso.get()
+                .load(image.getUrl())
+                // https://gist.github.com/lenamuit/9ae1458b43fc2cf28db2
+                .transform(new Transformation() {
+                    @Override
+                    public Bitmap transform(Bitmap source) {
+
+                        int maxWidth = displayWidth - imageViewMargin * 2;
+                        int maxHeight = displayHeight - imageViewMargin * 2;
+
+                        Log.d("COMMENT_IMAGE", String.valueOf(maxWidth));
+                        Log.d("COMMENT_IMAGE", String.valueOf(maxHeight));
+
+                        dims[0] = maxWidth;
+                        double aspectRatio = (double) source.getHeight() / (double) source.getWidth();
+                        dims[1] = (int) (dims[0] * aspectRatio);
+
+                        Log.d("COMMENT_IMAGE", String.valueOf((double) source.getWidth()));
+                        Log.d("COMMENT_IMAGE", String.valueOf((double) source.getHeight()));
+                        Log.d("COMMENT_IMAGE", String.valueOf(aspectRatio));
+                        Log.d("COMMENT_IMAGE", String.valueOf(dims[0]));
+                        Log.d("COMMENT_IMAGE", String.valueOf(dims[1]));
+
+                        // if image is too tall then recalculate dims
+                        if (dims[1] > maxHeight) {
+                            dims[1] = maxHeight;
+                            dims[0] = (int) (dims[1] / aspectRatio);
+
+                            Log.d("COMMENT_IMAGE", "targetHeight > maxHeight");
+                            Log.d("COMMENT_IMAGE", String.valueOf(dims[0]));
+                            Log.d("COMMENT_IMAGE", String.valueOf(dims[1]));
+                        }
+
+                        // cache dims because transform calls callback once
+                        imgDimCache.put(image.getId(), dims);
+
+                        if (dims[1] <= 0 || dims[0] <= 0) return source;
+                        Bitmap result = Bitmap.createScaledBitmap(source, dims[0], dims[1], false);
+                        if (result != source) {
+                            // Same bitmap is returned if sizes are the same
+                            source.recycle();
+                        }
+                        return result;
+                    }
+
+                    @Override
+                    public String key() {
+                        return "key";
+                    }
+                })
+                .into(imageView, new com.squareup.picasso.Callback() {
+                    @Override
+                    public void onSuccess() {
+                        int[] dims = imgDimCache.get(image.getId());
+                        Log.d("COMMENT_IMAGE", "image load callback");
+
+                        progressBar.setVisibility(View.GONE);
+
+                        if (dims != null) {
+                            Log.d("COMMENT_IMAGE", String.valueOf(dims[0]));
+                            Log.d("COMMENT_IMAGE", String.valueOf(dims[1]));
+
+                            RelativeLayout.LayoutParams layoutParams2 = new RelativeLayout.LayoutParams(dims[0], dims[1]);
+                            imageView.setLayoutParams(layoutParams2);
+                        } else {
+                            Log.d("COMMENT_IMAGE", "dims array is null");
+                        }
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+
+                    }
+                });
+    }
+
+    private void deleteTempImageFile() {
+        if (tempImageFile != null && tempImageFile.exists()) {
+            if (tempImageFile.delete()) {
+                Log.d("SELECT_IMAGE", "temp file deleted");
+            } else {
+                Log.d("SELECT_IMAGE", "temp file failed to be deleted");
+            }
+        }
+    }
+
+    // https://stackoverflow.com/a/4744499/10873011
+    private void calculateDisplayMetrics() {
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        displayHeight = displayMetrics.heightPixels;
+        displayWidth = displayMetrics.widthPixels;
+    }
+
+    // https://developer.android.com/training/permissions/requesting
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        switch (requestCode) {
+            case 1212:
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // Permission is granted.
+
+//                    openImageIntent();
+                } else {
+                    // Explain to the user that the feature is unavailable because
+                    // the features requires a permission that the user has denied.
+
+                    Toast.makeText(MenuDayActivity.this, "Dosya okuma izni vermelisiniz", Toast.LENGTH_LONG).show();
+                }
+                return;
+
+            case 1213:
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // Permission is granted.
+
+//                    openImageIntent();
+                } else {
+                    // Explain to the user that the feature is unavailable because
+                    // the features requires a permission that the user has denied.
+
+                    Toast.makeText(MenuDayActivity.this, "Dosya yazma izni vermelisiniz", Toast.LENGTH_LONG).show();
+                }
+                return;
+
+            case 1214:
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // Permission is granted.
+
+//                    openImageIntent();
+                } else {
+                    // Explain to the user that the feature is unavailable because
+                    // the features requires a permission that the user has denied.
+
+                    Toast.makeText(MenuDayActivity.this, "Kamera izni vermelisiniz", Toast.LENGTH_LONG).show();
+                }
+                return;
+        }
+        // Other 'case' lines to check for other
+        // permissions this app might request.
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+        Log.d("SELECT_IMAGE", "" + (resultCode == RESULT_OK) + " " + requestCode);
 
         if (resultCode == RESULT_OK) {
             if (requestCode == 1111) {
@@ -369,12 +684,10 @@ public class MenuDayActivity extends AppCompatActivity implements NewCommentDial
                 ImageView imageView = (ImageView) fragment.view.findViewById(R.id.image);
                 imageView.setImageURI(selectedImageUri);
             }
+        } else {
+            // remove temp file if exists
+            deleteTempImageFile();
         }
-    }
-
-    public void newCommentBtnClick(View view) {
-        DialogFragment newFragment = new NewCommentDialogFragment();
-        newFragment.show(getSupportFragmentManager(), "new_comment");
     }
 
     // https://developer.android.com/guide/topics/ui/dialogs#PassingEvents
@@ -385,22 +698,32 @@ public class MenuDayActivity extends AppCompatActivity implements NewCommentDial
     public void onDialogPositiveClick(NewCommentDialogFragment dialog) {
         // User touched the dialog's positive button
 
-        String rating = String.valueOf(dialog.getRating());
+        String rating = dialog.getRating();
         String comment = dialog.getComment();
 
-        Log.d("SELECT_IMAGE", selectedImageUriPath);
+        if (rating.isEmpty() || comment.isEmpty()) {
+            Toast.makeText(this, getString(R.string.new_comment_fillfields), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Log.d("SELECT_IMAGE", "" + selectedImageUriPath);
 
         MediaType MEDIA_TYPE_JPG = MediaType.parse("image/jpg");
         MediaType MEDIA_TYPE_PLAIN = MediaType.parse("text/plain");
-        File file = new File(selectedImageUriPath);
 
         // https://stackoverflow.com/a/36657336/10873011
         Map<String, RequestBody> map = new HashMap<>();
         map.put("comment", RequestBody.create(comment, MEDIA_TYPE_PLAIN));
         map.put("rating", RequestBody.create(rating, MEDIA_TYPE_PLAIN));
 
-        RequestBody fileBody = RequestBody.create(file, MEDIA_TYPE_JPG);
-        map.put("image\"; filename=\"pp.jpg", fileBody);
+        if (selectedImageUri != null) {
+            File file = new File(selectedImageUriPath);
+            RequestBody fileBody = RequestBody.create(file, MEDIA_TYPE_JPG);
+            map.put("image\"; filename=\"pp.jpg", fileBody);
+        }
+
+        LoadingOverlay loadingOverlay = LoadingOverlay.Companion.with(this, LoadingAnimation.BuiltinAnimations.getPROGRESS_BAR(), 0.8f, false, null, null, null);
+        loadingOverlay.show();
 
         Call<Comment> call = API.apiService.newComment(menu.getDate(), map);
         call.enqueue(new Callback<Comment>() {
@@ -412,12 +735,26 @@ public class MenuDayActivity extends AppCompatActivity implements NewCommentDial
                     Log.d("COMMENT", "new comment success");
                     Comment comment = response.body();
 
-                    // TODO: make success toast
+                    // remove temp file if exists
+                    deleteTempImageFile();
+
+                    // hide loader
+                    loadingOverlay.dismiss();
+
+                    // success info
+                    Toast.makeText(MenuDayActivity.this, getString(R.string.new_comment_success), Toast.LENGTH_LONG).show();
 
                     // reload comments
                     fetchCommentsFromApi();
                 } else {
-                    // TODO: make error toast
+                    // error info
+                    Toast.makeText(MenuDayActivity.this, getString(R.string.new_comment_failed), Toast.LENGTH_LONG).show();
+
+                    // remove temp file if exists
+                    deleteTempImageFile();
+
+                    // hide loader
+                    loadingOverlay.dismiss();
                 }
             }
 
@@ -426,6 +763,15 @@ public class MenuDayActivity extends AppCompatActivity implements NewCommentDial
                 // Log error here since request failed
                 Log.d("COMMENT", "new comment failed");
                 t.printStackTrace();
+
+                // error info
+                Toast.makeText(MenuDayActivity.this, getString(R.string.new_comment_failed), Toast.LENGTH_LONG).show();
+
+                // remove temp file if exists
+                deleteTempImageFile();
+
+                // hide loader
+                loadingOverlay.dismiss();
             }
         });
     }
@@ -434,6 +780,8 @@ public class MenuDayActivity extends AppCompatActivity implements NewCommentDial
     public void onDialogNegativeClick(NewCommentDialogFragment dialog) {
         // User touched the dialog's negative button
 
+        // remove temp file if exists
+        deleteTempImageFile();
     }
 
     // this event will enable the back

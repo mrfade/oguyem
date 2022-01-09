@@ -24,31 +24,52 @@
             android:paddingHorizontal="20sp"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/user_name"
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="25sp"
-                android:fontFamily="@font/lato"
-                android:text="Anonim">
-            </TextView>
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/user_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:fontFamily="@font/lato"
+                    android:gravity="center"
+                    android:layout_alignParentStart="true"
+                    android:text="Anonim">
+                </TextView>
+
+                <Button
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:id="@+id/delete_comment"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_margin="0sp"
+                    android:insetTop="0sp"
+                    android:insetBottom="0sp"
+                    android:minWidth="0sp"
+                    android:minHeight="0sp"
+                    android:layout_alignParentEnd="true"
+                    android:textColor="@color/md_pink_500"
+                    android:textAllCaps="false"
+                    android:fontFamily="@font/lato"
+                    android:letterSpacing="-0.05"
+                    android:text="@string/delete_comment"
+                    android:visibility="gone">
+                </Button>
+            </RelativeLayout>
 
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="25sp"
                 android:orientation="horizontal">
 
-                <!--<TextView
-                    android:id="@+id/rating"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_alignParentStart="true">
-                </TextView>-->
-
                 <RatingBar
+                    style="?android:attr/ratingBarStyleSmall"
                     android:id="@+id/rating"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    style="?android:attr/ratingBarStyleSmall"
+                    android:layout_centerVertical="true"
                     android:numStars="5"
                     android:stepSize="0.5"
                     android:isIndicator="true" />

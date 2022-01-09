@@ -17,6 +17,8 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.gson.Gson;
+import com.mohamedabulgasem.loadingoverlay.LoadingAnimation;
+import com.mohamedabulgasem.loadingoverlay.LoadingOverlay;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -49,6 +51,8 @@ public class MenuWeekActivity extends AppCompatActivity {
     TextView textViewErrorMessage, textViewMenuRestored;
     SwipeRefreshLayout swipeRefreshLayout;
     ProgressDialog loading;
+
+    LoadingOverlay loadingOverlay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -308,12 +312,19 @@ public class MenuWeekActivity extends AppCompatActivity {
     }
 
     private void showLoadingDialog() {
-        loading = ProgressDialog.show(MenuWeekActivity.this, getString(R.string.menu_fetching), getString(R.string.please_wait), false, false);
+//        loading = ProgressDialog.show(MenuWeekActivity.this, getString(R.string.menu_fetching), getString(R.string.please_wait), false, false);
+
+        loadingOverlay = LoadingOverlay.Companion.with(this, LoadingAnimation.BuiltinAnimations.getPROGRESS_BAR(), 0.8f, false, null, null, null);
+        loadingOverlay.show();
     }
 
     private void dismissLoadingDialog() {
-        if (loading != null && loading.isShowing()) {
+        /*if (loading != null && loading.isShowing()) {
             loading.dismiss();
+        }*/
+
+        if (loadingOverlay != null) {
+            loadingOverlay.dismiss();
         }
     }
 
