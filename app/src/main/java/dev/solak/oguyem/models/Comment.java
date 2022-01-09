@@ -3,6 +3,8 @@ package dev.solak.oguyem.models;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.List;
+
 public class Comment {
 
     @SerializedName("id")
@@ -26,6 +28,9 @@ public class Comment {
     @SerializedName("updated_at")
     @Expose
     private String updatedAt;
+    @SerializedName("images")
+    @Expose
+    private List<Image> images = null;
 
     public Integer getId() {
         return id;
@@ -81,6 +86,14 @@ public class Comment {
 
     public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public List<Image> getImages() {
+        return images;
+    }
+
+    public void setImages(List<Image> images) {
+        this.images = images;
     }
 
 }

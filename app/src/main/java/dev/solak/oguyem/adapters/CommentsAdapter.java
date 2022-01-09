@@ -9,14 +9,12 @@ import android.widget.TextView;
 
 import org.ocpsoft.prettytime.PrettyTime;
 
-import java.text.DecimalFormat;
 import java.text.ParseException;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 import dev.solak.oguyem.R;
-import dev.solak.oguyem.Utils;
+import dev.solak.oguyem.classes.Utils;
 import dev.solak.oguyem.models.Comment;
 
 public class CommentsAdapter extends ArrayAdapter<Comment> implements View.OnClickListener{
@@ -30,7 +28,7 @@ public class CommentsAdapter extends ArrayAdapter<Comment> implements View.OnCli
     }
 
     public CommentsAdapter(List<Comment> data, Context context) {
-        super(context, R.layout.comment_item, data);
+        super(context, R.layout.fragment_comment_item, data);
         this.dataSet = data;
         this.mContext = context;
 
@@ -67,7 +65,7 @@ public class CommentsAdapter extends ArrayAdapter<Comment> implements View.OnCli
 
             viewHolder = new ViewHolder();
             LayoutInflater inflater = LayoutInflater.from(getContext());
-            convertView = inflater.inflate(R.layout.comment_item, parent, false);
+            convertView = inflater.inflate(R.layout.fragment_comment_item, parent, false);
             viewHolder.name = (TextView) convertView.findViewById(R.id.name);
             viewHolder.rating = (TextView) convertView.findViewById(R.id.rating);
             viewHolder.timeago = (TextView) convertView.findViewById(R.id.timeago);

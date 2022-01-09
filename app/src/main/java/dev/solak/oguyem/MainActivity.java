@@ -19,6 +19,7 @@ import android.widget.TextView;
 
 import java.util.List;
 
+import dev.solak.oguyem.classes.Utils;
 import dev.solak.oguyem.interfaces.oguyemApi;
 import dev.solak.oguyem.models.Food;
 import dev.solak.oguyem.models.Menu;

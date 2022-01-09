@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="60sp"
+        android:background="@color/md_pink_600"
+        android:textColor="@color/white"
+        android:textSize="24sp"
+        android:gravity="center"
+        android:fontFamily="@font/montserrat"
+        android:text="@string/new_comment">
+    </TextView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="10sp"
+        android:padding="10sp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:textSize="16sp"
+            android:fontFamily="@font/lato"
+            android:text="@string/your_rating">
+        </TextView>
+
+        <RatingBar
+            android:id="@+id/rating"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="?android:attr/ratingBarStyle"
+            android:numStars="5"
+            android:stepSize="0.5" />
+
+        <EditText
+            android:id="@+id/comment"
+            android:inputType="textMultiLine"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:lines="8"
+            android:minLines="6"
+            android:gravity="top|start"
+            android:maxLines="10"
+            android:scrollbars="vertical"
+            android:layout_marginTop="10sp"
+            android:textSize="16sp"
+            android:fontFamily="@font/lato"
+            android:hint="@string/write_a_comment">
+        </EditText>
+
+        <Button
+            android:id="@+id/select_images"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="select image">
+        </Button>
+
+        <ImageView
+            android:id="@+id/image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+        </ImageView>
+    </LinearLayout>
+</LinearLayout>

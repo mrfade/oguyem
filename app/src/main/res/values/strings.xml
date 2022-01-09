@@ -7,4 +7,9 @@
     <string name="last_updated_at">Son güncelleme: %s</string>
     <string name="comments">Yorumlar</string>
     <string name="comment_fetch_failed">Yorumlar getirilemedi!</string>
+    <string name="cancel">İptal</string>
+    <string name="send">Gönder</string>
+    <string name="new_comment">Yeni Yorum</string>
+    <string name="your_rating">Puanınız</string>
+    <string name="write_a_comment">Yorum yazın</string>
 </resources>

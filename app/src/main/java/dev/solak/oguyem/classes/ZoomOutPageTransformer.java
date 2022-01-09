@@ -1,4 +1,4 @@
-package dev.solak.oguyem;
+package dev.solak.oguyem.classes;
 
 import android.view.View;
 

@@ -11,13 +11,9 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
-import androidx.viewpager2.adapter.FragmentViewHolder;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.gson.Gson;
@@ -29,7 +25,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import dev.solak.oguyem.fragments.MenuWeekFragment;
+import dev.solak.oguyem.adapters.MenuWeekAdapter;
+import dev.solak.oguyem.classes.API;
+import dev.solak.oguyem.classes.Utils;
+import dev.solak.oguyem.classes.ZoomOutPageTransformer;
 import dev.solak.oguyem.models.Menu;
 import dev.solak.oguyem.models.MenusResponse;
 import retrofit2.Call;
@@ -37,8 +36,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MenuWeekActivity extends AppCompatActivity {
-
-    private static final int NUM_PAGES = 7;
 
     public static boolean menuFromCache = false;
     public static List<Menu> menu;
@@ -64,8 +61,6 @@ public class MenuWeekActivity extends AppCompatActivity {
 
         // set transitions
         setWindowTransitions();
-        // init api
-        API.init();
 
         if (Utils.isNetworkConnected(this)) {
             fetchMenuFromApi();
@@ -80,7 +75,7 @@ public class MenuWeekActivity extends AppCompatActivity {
     }
 
     private void fetchMenuFromApi() {
-        loading = ProgressDialog.show(this, getString(R.string.menu_fetching), getString(R.string.please_wait), false, false);
+        showLoadingDialog();
 
         Call<MenusResponse> call = API.apiService.getMenus();
         call.enqueue(new Callback<MenusResponse>() {
@@ -97,7 +92,7 @@ public class MenuWeekActivity extends AppCompatActivity {
                     saveMenuToCache();
                     populateMenus();
 
-                    loading.dismiss();
+                    dismissLoadingDialog();
                 } else {
                     Log.d("MenuFetch", "Failed - Request not successful!");
                     menuFetchFailed();
@@ -116,7 +111,7 @@ public class MenuWeekActivity extends AppCompatActivity {
         textViewError(R.string.menu_fetch_failed);
         restoreMenuFromCache();
         populateMenus();
-        loading.dismiss();
+        dismissLoadingDialog();
     }
 
     private void restoreMenuFromCache() {
@@ -312,76 +307,19 @@ public class MenuWeekActivity extends AppCompatActivity {
         textViewErrorMessage.setText(resid);
     }
 
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-
-        /*if (viewPagers.get(0).getCurrentItem() == 0) {
-            // If the user is currently looking at the first step, allow the system to handle the
-            // Back button. This calls finish() on this activity and pops the back stack.
-            super.onBackPressed();
-        } else {
-            // Otherwise, select the previous step.
-            viewPagers.get(0).setCurrentItem(viewPagers.get(0).getCurrentItem() - 1);
-        }*/
+    private void showLoadingDialog() {
+        loading = ProgressDialog.show(MenuWeekActivity.this, getString(R.string.menu_fetching), getString(R.string.please_wait), false, false);
     }
 
-    private class MenuWeekAdapter extends FragmentStateAdapter {
-
-        ArrayList<Fragment> fms = new ArrayList<>();
-        ArrayList<Long> fmIds = new ArrayList<>();
-        int row = 0;
-        List<Menu> menu;
-
-        public MenuWeekAdapter(FragmentActivity fa, int row, List<Menu> menu) {
-            super(fa);
-            this.row = row;
-            this.menu = menu;
+    private void dismissLoadingDialog() {
+        if (loading != null && loading.isShowing()) {
+            loading.dismiss();
         }
+    }
 
-        @Override
-        public Fragment createFragment(int position) {
-            int evenodd = row % 2 == 1 ? position + 1 % 2 : position % 2;
-            int arrPosition = (row * 7) + position;
-            Fragment fragment = new MenuWeekFragment(menu.get(position), position, arrPosition, evenodd);
-            fms.add(fragment);
-            fmIds.add((long) fragment.hashCode());
-            return fragment;
-        }
-
-        @Override
-        public int getItemCount() {
-            return NUM_PAGES;
-        }
-
-        /*@Override
-        public long getItemId(int position) {
-            // generate new
-            long hashcode = createFragment(position).hashCode();
-            Log.d("hashcode", String.valueOf(hashcode));
-            return hashcode;
-        }
-
-        @Override
-        public boolean containsItem(long itemId) {
-            // false if item is changed
-            Log.d("contains", String.valueOf(fmIds.contains(itemId)));
-            return fmIds.contains(itemId);
-        }*/
-
-        public void onBindViewHolder2(@NonNull FragmentViewHolder holder, int position, @NonNull List<Object> payloads) {
-
-            String tag = "f" + holder.getItemId();
-
-            Fragment fragment = getSupportFragmentManager().findFragmentByTag(tag);
-
-            if (fragment != null) {
-                //manual update fragment
-            } else {
-                // fragment might be null, if it`s call of notifyDatasetChanged()
-                // which is updates whole list, not specific fragment
-                super.onBindViewHolder(holder, position, payloads);
-            }
-        }
+    @Override
+    protected void onDestroy() {
+        dismissLoadingDialog();
+        super.onDestroy();
     }
 }

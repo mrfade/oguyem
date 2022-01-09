@@ -2,11 +2,9 @@ package dev.solak.oguyem.fragments;
 
 import android.app.ActivityOptions;
 import android.content.Intent;
-import android.graphics.Typeface;
 import android.os.Bundle;
 
 import androidx.cardview.widget.CardView;
-import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 
 import android.util.Log;
@@ -23,7 +21,7 @@ import java.util.List;
 
 import dev.solak.oguyem.MenuDayActivity;
 import dev.solak.oguyem.R;
-import dev.solak.oguyem.Utils;
+import dev.solak.oguyem.classes.Utils;
 import dev.solak.oguyem.models.Food;
 import dev.solak.oguyem.models.Menu;
 
