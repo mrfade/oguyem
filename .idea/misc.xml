@@ -3,6 +3,7 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/Enes/AndroidStudioProjects/OGUYEM/app/src/main/res/drawable/ic_baseline_thumb_down_24.xml" value="0.25833333333333336" />
         <entry key="..\:/Users/Enes/AndroidStudioProjects/OGUYEM/app/src/main/res/drawable/rounded_border.xml" value="0.24322916666666666" />
         <entry key="..\:/Users/Enes/AndroidStudioProjects/OGUYEM/app/src/main/res/drawable/rounded_border_10sp.xml" value="0.25833333333333336" />
         <entry key="..\:/Users/Enes/AndroidStudioProjects/OGUYEM/app/src/main/res/drawable/rounded_card.xml" value="0.25833333333333336" />
@@ -15,7 +16,7 @@
         <entry key="..\:/Users/Enes/AndroidStudioProjects/OGUYEM/app/src/main/res/layout/comment_item.xml" value="0.4" />
         <entry key="..\:/Users/Enes/AndroidStudioProjects/OGUYEM/app/src/main/res/layout/dialog_image.xml" value="0.2115036231884058" />
         <entry key="..\:/Users/Enes/AndroidStudioProjects/OGUYEM/app/src/main/res/layout/dialog_new_comment.xml" value="0.6" />
-        <entry key="..\:/Users/Enes/AndroidStudioProjects/OGUYEM/app/src/main/res/layout/fragment_comment_item.xml" value="0.72" />
+        <entry key="..\:/Users/Enes/AndroidStudioProjects/OGUYEM/app/src/main/res/layout/fragment_comment_item.xml" value="0.536" />
         <entry key="..\:/Users/Enes/AndroidStudioProjects/OGUYEM/app/src/main/res/layout/fragment_menu_item.xml" value="0.2421875" />
         <entry key="..\:/Users/Enes/AndroidStudioProjects/OGUYEM/app/src/main/res/layout/fragment_menu_week.xml" value="0.2" />
       </map>

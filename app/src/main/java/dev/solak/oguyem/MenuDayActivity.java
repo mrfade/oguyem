@@ -1,5 +1,6 @@
 package dev.solak.oguyem;
 
+import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,6 +18,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.res.ColorStateList;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
@@ -28,6 +31,7 @@ import android.transition.ChangeBounds;
 import android.transition.Slide;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -43,6 +47,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.button.MaterialButton;
 import com.mohamedabulgasem.loadingoverlay.LoadingAnimation;
 import com.mohamedabulgasem.loadingoverlay.LoadingOverlay;
 import com.squareup.picasso.Picasso;
@@ -163,12 +168,12 @@ public class MenuDayActivity extends AppCompatActivity implements NewCommentDial
         }
 
         fetchCommentsFromApi();
-        newCommentLayout.setVisibility(View.VISIBLE);
-        /*if (menu.getDate().equals(Utils.formatDate("yyyy-MM-dd", new Date()))) {
+//        newCommentLayout.setVisibility(View.VISIBLE);
+        if (menu.getDate().equals(Utils.formatDate("yyyy-MM-dd", new Date()))) {
             newCommentLayout.setVisibility(View.VISIBLE);
         } else {
             newCommentLayout.setVisibility(View.GONE);
-        }*/
+        }
     }
 
     private void fetchCommentsFromApi() {
@@ -225,6 +230,115 @@ public class MenuDayActivity extends AppCompatActivity implements NewCommentDial
             TextView timeago = item.findViewById(R.id.timeago);
             TextView tComment = item.findViewById(R.id.comment);
             LinearLayout imagesLayout = item.findViewById(R.id.images_layout);
+            MaterialButton upvoteButton = item.findViewById(R.id.upvote_comment);
+            MaterialButton downvoteButton = item.findViewById(R.id.downvote_comment);
+
+            // fill votes
+            upvoteButton.setText(String.valueOf(comment.getUpvotes()));
+            downvoteButton.setText(String.valueOf(comment.getDownvotes()));
+
+            // https://stackoverflow.com/a/17277714/10873011
+            TypedValue typedValue = new TypedValue();
+            Resources.Theme theme = getTheme();
+
+            theme.resolveAttribute(R.attr.colorOnSecondary, typedValue, true);
+            @ColorInt int colorOnSecondary = typedValue.data;
+
+            theme.resolveAttribute(R.attr.colorSecondary, typedValue, true);
+            @ColorInt int colorSecondary = typedValue.data;
+
+            // set upvote button
+            upvoteButton.setOnClickListener(view -> {
+
+                if (comment.getUserVote() == 1) return;
+
+                Call<InfoResponse> call = API.apiService.voteComment(menu.getDate(), comment.getId(), "up");
+                call.enqueue(new Callback<InfoResponse>() {
+                    @Override
+                    public void onResponse(@NonNull Call<InfoResponse> call, @NonNull Response<InfoResponse> response) {
+
+                        if(response.isSuccessful()) {
+
+                            Log.d("COMMENT_VOTE", "current_vote " + comment.getUserVote());
+
+                            upvoteButton.setTextColor(colorSecondary);
+                            upvoteButton.setIconTint(ColorStateList.valueOf(colorSecondary));
+
+                            if (comment.getUserVote() == -1) {
+                                downvoteButton.setTextColor(colorOnSecondary);
+                                downvoteButton.setIconTint(ColorStateList.valueOf(colorOnSecondary));
+                                comment.setDownvotes(comment.getDownvotes() - 1);
+                            }
+
+                            comment.setUserVote(1);
+                            comment.setUpvotes(comment.getUpvotes() + 1);
+
+                            // fill votes
+                            upvoteButton.setText(String.valueOf(comment.getUpvotes()));
+                            downvoteButton.setText(String.valueOf(comment.getDownvotes()));
+
+                        } else {
+                            Toast.makeText(MenuDayActivity.this, R.string.comment_vote_couldnt_be_saved, Toast.LENGTH_LONG).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<InfoResponse> call, @NonNull Throwable t) {
+                        Toast.makeText(MenuDayActivity.this, R.string.comment_vote_couldnt_be_saved, Toast.LENGTH_LONG).show();
+                    }
+                });
+            });
+
+            // set downvote button
+            downvoteButton.setOnClickListener(view -> {
+
+                if (comment.getUserVote() == -1) return;
+
+                Call<InfoResponse> call = API.apiService.voteComment(menu.getDate(), comment.getId(), "down");
+                call.enqueue(new Callback<InfoResponse>() {
+                    @Override
+                    public void onResponse(@NonNull Call<InfoResponse> call, @NonNull Response<InfoResponse> response) {
+
+                        if(response.isSuccessful()) {
+
+                            Log.d("COMMENT_VOTE", "current_vote " + comment.getUserVote());
+
+                            downvoteButton.setTextColor(colorSecondary);
+                            downvoteButton.setIconTint(ColorStateList.valueOf(colorSecondary));
+
+                            if (comment.getUserVote() == 1) {
+                                upvoteButton.setTextColor(colorOnSecondary);
+                                upvoteButton.setIconTint(ColorStateList.valueOf(colorOnSecondary));
+                                comment.setUpvotes(comment.getUpvotes() - 1);
+                            }
+
+                            comment.setUserVote(-1);
+                            comment.setDownvotes(comment.getDownvotes() + 1);
+
+                            // fill votes
+                            upvoteButton.setText(String.valueOf(comment.getUpvotes()));
+                            downvoteButton.setText(String.valueOf(comment.getDownvotes()));
+
+                        } else {
+                            Toast.makeText(MenuDayActivity.this, R.string.comment_vote_couldnt_be_saved, Toast.LENGTH_LONG).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<InfoResponse> call, @NonNull Throwable t) {
+                        Toast.makeText(MenuDayActivity.this, R.string.comment_vote_couldnt_be_saved, Toast.LENGTH_LONG).show();
+                    }
+                });
+            });
+
+            // set icon colors if user voted before
+            if (comment.getUserVote() == 1) {
+                upvoteButton.setTextColor(colorSecondary);
+                upvoteButton.setIconTint(ColorStateList.valueOf(colorSecondary));
+            } else if (comment.getUserVote() == -1) {
+                downvoteButton.setTextColor(colorSecondary);
+                downvoteButton.setIconTint(ColorStateList.valueOf(colorSecondary));
+            }
 
             Log.d("COMMENT", "User.id: " + User.user.getId());
             Log.d("COMMENT", "Comment.user.id: " + comment.getUserId());

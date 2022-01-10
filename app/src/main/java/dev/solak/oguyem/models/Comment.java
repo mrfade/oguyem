@@ -28,9 +28,18 @@ public class Comment {
     @SerializedName("updated_at")
     @Expose
     private String updatedAt;
+    @SerializedName("upvotes")
+    @Expose
+    private Integer upvotes;
+    @SerializedName("downvotes")
+    @Expose
+    private Integer downvotes;
     @SerializedName("images")
     @Expose
     private List<Image> images = null;
+    @SerializedName("user_vote")
+    @Expose
+    private Integer userVote = 0;
 
     public Integer getId() {
         return id;
@@ -88,12 +97,36 @@ public class Comment {
         this.updatedAt = updatedAt;
     }
 
+    public Integer getUpvotes() {
+        return upvotes;
+    }
+
+    public void setUpvotes(Integer upvotes) {
+        this.upvotes = upvotes;
+    }
+
+    public Integer getDownvotes() {
+        return downvotes;
+    }
+
+    public void setDownvotes(Integer downvotes) {
+        this.downvotes = downvotes;
+    }
+
     public List<Image> getImages() {
         return images;
     }
 
     public void setImages(List<Image> images) {
         this.images = images;
+    }
+
+    public Integer getUserVote() {
+        return userVote;
+    }
+
+    public void setUserVote(Integer userVote) {
+        this.userVote = userVote;
     }
 
 }

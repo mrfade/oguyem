@@ -22,4 +22,6 @@
     <string name="no">Hayır</string>
     <string name="comment_deleted_successfully">Yorumunuz başarıyla silindi</string>
     <string name="comment_deletion_failed">Yorumunuz silinemedi</string>
+    <string name="is_comment_helpful">Bu değerlendirme faydalı mı?</string>
+    <string name="comment_vote_couldnt_be_saved">Oyunuz kaydedilemedi.</string>
 </resources>
