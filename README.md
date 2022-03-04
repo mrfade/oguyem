@@ -14,7 +14,7 @@ Users can view the menu, vote for menu, add comments, add pictures to the commen
 
 ## Contributors
 
-| <a href="http://twitter.com/enessolak_" alt="Follow @enessolak_ on Twitter"><img src="https://avatars.githubusercontent.com/u/7377876?v=4?s=70" width="70px;" alt=""/></a> | <img src="https://avatars.githubusercontent.com/u/71544856?v=4?s=70" width="70px;" alt=""/> |
+| <a href="http://github.com/mrfade"><img src="https://avatars.githubusercontent.com/u/7377876?v=4?s=70" width="70px;" alt=""/></a> | <a href="http://github.com/orhaninac"><img src="https://avatars.githubusercontent.com/u/71544856?v=4?s=70" width="70px;" alt=""/></a> |
 |---|---|
 | [Enes Solak](https://enessolak.com.tr/) | [Orhan İnaç](https://orhaninac.com.tr/) |
 
